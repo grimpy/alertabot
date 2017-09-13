@@ -7,36 +7,37 @@ import config
 import os
 
 LOG = logging.getLogger('alerts')
-class AgentChooser(object):
-    agents = []
-
-    _instance = None
-    def __new__(class_, *args, **kwargs):
-        if not isinstance(class_._instance, class_):
-            class_._instance = object.__new__(class_, *args, **kwargs)
-        return class_._instance
-
+def singleton(cls):
+    instances = {}
+    def getinstance():
+        if cls not in instances:
+            instances[cls] = cls()
+        return instances[cls]
+    return getinstance
+@singleton
+class AgentChooser:
     def __init__(self):
-        self.url = config.REPO_URL #","ssh://git@docs.greenitglobe.com:10022/gig/gig_team.git")
-        self.path = config.REPO_PATH #", "/opt/code/docs.greenitglobe.com/gig/gig_team")
+        self.url = config.REPO_URL
+        self.path = config.REPO_PATH
         self.parent_path = "/".join(self.path.split("/")[:-1])
         self.operations_path = os.path.join(self.path, "teams/operations")
-        self.file_paths = []
         self.agents = []
-        self.get_file_paths()
-        self.update_agents()
 
 
     def pull_repo(self):
+        LOG.debug("Pulling the repo")
         if os.path.exists(self.path):
             os.system('cd {} && git pull'.format(self.path))
         else:
             os.system('mkdir -p {}'.format(self.parent_path))
-            os.system('cd {} && git clone {}'.format(self.path, self.url))
+            os.system('cd {} && git clone {}'.format(self.parent_path, self.url))
 
     def get_file_paths(self):
+        LOG.debug("Get paths for agents person.toml file")
+        file_paths = []
         for file_path in glob.iglob('{}/**/*.toml'.format(self.operations_path), recursive=True):
-            self.file_paths.append(file_path)
+            file_paths.append(file_path)
+        return file_paths
 
 
     def get_current_agent(self):
@@ -49,8 +50,9 @@ class AgentChooser(object):
         """
         this method used to update agents list with the new data
         """
+        LOG.debug('updating agents')
         agents = []
-        for path in self.file_paths:
+        for path in self.get_file_paths():
             try:
                 with open(path, 'rb') as f:
                     toml = pytoml.load(f)

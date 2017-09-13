@@ -1,14 +1,10 @@
-import logging
-
 from alerta.app import db
 from alerta.app.exceptions import RateLimit
 from alerta.plugins import PluginBase
 from alerta.app import app
 import os
-LOG = logging.getLogger('alerta.plugins.gig')
-import pytoml
 TOKEN = app.config.get('TOKEN')
-URL = "http://localhost:5000/alerts/"
+URL = app.config['FLASK_API_URL']
 import requests
 import json
 class GIGAlert(PluginBase):
@@ -17,12 +13,14 @@ class GIGAlert(PluginBase):
         return alert
 
     def post_receive(self, alert):
-
         data = {}
-        data['severity'] = alert.severity
+        data['id'] = alert.id
+        data['short_id'] = alert.get_id(short=True)
+        data['severity'] = alert.severity.capitalize()
         data['text'] = alert.text
         data['environment'] = alert.environment
-        data['status'] = alert.status
+        data['event'] = alert.event
+        data['resource'] = alert.resource
         r = requests.post(URL, data=json.dumps(data))
         return
 

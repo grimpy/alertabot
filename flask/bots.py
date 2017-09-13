@@ -11,11 +11,15 @@ from telepot.delegate import (
 import logging
 import os
 import pytoml
-from agent_manager import AgentChooser
 LOG = logging.getLogger('alerta.plugins.gig')
 import os
 import pytoml
 import config
+import requests
+import json
+from alertaclient.api import ApiClient
+from alertaclient.alert import Alert
+
 chat_ids = {}
 chat_ids_path = config.CHAT_IDS_PATH #, "/opt/chat_ids.toml")
 sent_messages = []
@@ -61,25 +65,21 @@ class AlertsStarter(telepot.helper.ChatHandler):
 
 class Alerter(telepot.helper.CallbackQueryOriginHandler):
     def __init__(self, *args, **kwargs):
-        self.agent_chooser = AgentChooser()
         super(Alerter, self).__init__(*args, **kwargs)
 
     def on_callback_query(self, msg):
         query_id, from_id, query_data = telepot.glance(msg, flavor='callback_query')
-        if query_data == 'ack':
-            # Current Agent ack the message
-            for message in sent_messages:
-                if msg['message']['message_id'] == message['message_id']:
-                    sent_messages.remove(message)
-                    self.bot.sendMessage(self.id[0], "Thanks... !")
-                    break
-            else:
-                self.bot.sendMessage(self.id[0], "Oh Sorry, You were too late. You can not ACK this now.")
+        for message in sent_messages:
+            if msg['message']['message_id'] == message['message_id']:
+                sent_messages.remove(message)
+                self.editor.editMessageReplyMarkup()
+                self.bot.sendMessage(self.id[0], "Thanks... !")
+                api = ApiClient(endpoint=config.ALERTA_API_URL, key=config.ALERTA_API_KEY)
+                text = "status change via API (Telegram) by {}.".format(message['telegram'])
+                api.update_status(alertid=message['data']['id'], status = query_data, text=text)
+                break
+        else:
+            self.editor.editMessageReplyMarkup()
+            self.bot.sendMessage(self.id[0], "Oh Sorry, You were too late. You can not ACK this now.")
 
             self.close()
-
-    def on__idle(self, event):
-        # if this is the current Agent (i.e not the backup) send to the backup
-        time.sleep(5)
-        self.editor.deleteMessage()
-        self.close()

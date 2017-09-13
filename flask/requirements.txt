@@ -1,1 +1,5 @@
-flask
+Flask>=0.12.2
+pytoml>=0.1.14
+crontab>=0.21.3
+telepot>=12.3
+alerta>=4.10.3

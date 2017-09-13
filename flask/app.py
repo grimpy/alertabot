@@ -14,9 +14,8 @@ from flask import jsonify, request
 from bots import get_chat_ids, initialize_chat_ids, get_sent_messages
 import json
 import time
-import asyncio
 import threading
-
+import config
 
 app = Flask(__name__)
 app.config.from_pyfile("config.py")
@@ -31,9 +30,17 @@ bot = telepot.DelegatorBot(TOKEN, [
     pave_event_space()(
         per_callback_query_origin(), create_open, Alerter, timeout=5),
 ])
-
 agent_chooser = AgentChooser()
+
 message_loop = MessageLoop(bot)
+def update_agents():
+
+    agent_chooser.pull_repo()
+    agent_chooser.update_agents()
+    time.sleep(app.config.get("PULL_REPO_PERIOD", 1800))
+
+agent_thread = threading.Thread(name="update_agents", target=update_agents)
+agent_thread.start()
 
 def check_sent_messages():
     while(1):
@@ -64,14 +71,14 @@ def check_sent_messages():
                         # should pass if the user caught it before deleting
                         pass
 
-        time.sleep(20)
+        time.sleep(app.config.get("MESSAGE_TIMEOUT", 60))
 
 message_thread = threading.Thread(name="message_thread", target=check_sent_messages)
 message_thread.start()
 
 
 
-@app.route('/alerts/', methods=['POST'])
+@app.route('/alerts', methods=['POST'])
 def new_alert():
     data = json.loads(request.data.decode())
     agent = agent_chooser.get_current_agent()
@@ -90,15 +97,29 @@ def new_alert():
 
 def send_inline_message(telegram, data, call_back="ack"):
     chat_id = get_chat_ids().get(telegram)
-    message = bot.sendMessage(chat_id,
-        "{}: {}: {}".format(data['text'], data['severity'], data['environment']),
-        reply_markup=InlineKeyboardMarkup(
-            inline_keyboard=[[
-                InlineKeyboardButton(text='ACK', callback_data=call_back),
-            ]]
+    text = '[%s](%s) %s: %s - %s on %s\n%s' % (
+                data['short_id'],
+                '%s/#/alert/%s' % (config.ALERTA_DASHBOARD_URL, data['id']),
+                data['environment'],
+                data['severity'],
+                data['event'],
+                data['resource'],
+                data['text']
             )
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[[
+            {'text':'ack', 'callback_data': 'ack'},
+            {'text':'close', 'callback_data': 'close'},
+
+        ]]
         )
+    try:
+        message = bot.sendMessage(chat_id, text, parse_mode='Markdown', reply_markup=keyboard)
+    except Exception as e:
+        raise RuntimeError("Telegram Error - %s", e)
     return message
+
+
 
 if __name__ == "__main__":
     message_loop.run_as_thread()
