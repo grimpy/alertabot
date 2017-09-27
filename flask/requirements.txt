@@ -3,3 +3,5 @@ pytoml>=0.1.14
 crontab>=0.21.3
 telepot>=12.3
 alerta>=4.10.3
+oauth2client==4.1.2
+gspread==0.6.2

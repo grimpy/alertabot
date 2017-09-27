@@ -1,10 +1,20 @@
 
-TOKEN = "<BOT_TOKEN>"
+TOKEN = "398431464:AAFZlUhhzS_-WjT2S7h-RZvzX7Kyxa8dR9s"
 MESSAGE_TIMEOUT = 10
 PULL_REPO_PERIOD = 1800 # Every half an hour
-CHAT_IDS_PATH = "/opt/chat_ids.toml" # A path to TOML file to store chat_ids in
+CHAT_IDS_PATH = "/opt/chat_ids" # A path to dir in which we will store TOML files to store chat_ids
 REPO_URL = "ssh://git@docs.greenitglobe.com:10022/gig/gig_team.git" # git url for the teams repo your key should be authorized first
 REPO_PATH = "/opt/code/docs.greenitglobe.com/gig/gig_team" # path to where you want to put the code in
 ALERTA_DASHBOARD_URL = "http://192.168.122.5"
 ALERTA_API_URL = "http://192.168.122.5/api"
-ALERTA_API_KEY = "<ALERTA_API_KEY}"
+ALERTA_API_KEY = "9JROR4z4vdWuiyLId0RhjQeW2O1pWljSP0yTurdU"
+ENV_FILE = "/opt/code/docs.greenitglobe.com/gig/gig_team/teams/operations/env.toml"
+MAIL_SERVER_HOST = "localhost"
+MAIL_SERVER_PORT = ""
+MAIL_SERVER_LOGIN = ""
+MAIL_SERVER_PASSWORD = ""
+FROM_EMAIL = "admin@alerta.aydo.com"
+GOOGLE_API_KEY_PATH="/opt/code/key1.json"
+DEVOPS_SHEET_KEY="1tEIk3hQ2P5edrhste73WF8hTtNDfWOatpcCYuwUlPmE"
+DEVOPS_SHEET_NAME = "DevOps"
+MONITORS_SHEET_NAME = "NOC Monitoring"
