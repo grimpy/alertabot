@@ -102,7 +102,7 @@ def new_alert():
     for agent in monitors:
         message = send_message(agent['telegram'], text, callback=True)
         if message and not message_id:
-            mssage_id = message['text']
+            message_id = message['text']
 
     # Add message to sent message to do escalation for it
     msg = {}
