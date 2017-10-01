@@ -3,6 +3,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import config
 import pytoml
+import os
 
 ENV_FILE = config.ENV_FILE # path to dir in which we will save ids
 def singleton(cls):
@@ -69,16 +70,15 @@ def construct_message_text(data):
     return text
 
 def get_envs():
-    if os.path.exists(ENV_FILE):
-        with open (ENV_FILE, "rb") as f:
-            envs = pytoml.load(f)
-        return envs
-    return {}
+    envs = {}
+    with open (ENV_FILE, "rb") as f:
+        envs = pytoml.load(f)
+    return envs
 
 def pull_repo():
     url = config.REPO_URL
     path = config.REPO_PATH
-    parent_path = "/".join(self.path.split("/")[:-1])
+    parent_path = "/".join(path.split("/")[:-1])
     LOG.debug("Pulling the repo")
     if os.path.exists(path):
         os.system('cd {} && git pull'.format(path))
