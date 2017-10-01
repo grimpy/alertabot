@@ -1,6 +1,6 @@
 
 # Installing alerta
-you can follow these steps to install Alerta as described [here](http://alerta.readthedocs.io/en/latest/gettingstarted/tutorial-1-deploy-alerta.html#tutorial-1)
+you can follow these steps to install Alerta as described [here](https://github.com/gigforks/alerta/blob/master/docs/Installation.md)
 # Installing GIG plugins
 from inside `alertabot/alerta_plugin/` folder do
 ```
@@ -24,7 +24,7 @@ SEVERITY_MAP = {
 ```
 
 # Starting Flask Server
-edit the file `config.py` under alertabot/flask to have the following inf
+copy config.example under alertabot/flask to config.py and edit it to have the following information
 ```
 TOKEN = "<Bot Token>" # The token you got from the bot father after creating the bot
 MESSAGE_TIMEOUT = 30 # Define the period in which an agnet can reply to the message before escalations (in seconds)
@@ -35,4 +35,20 @@ REPO_PATH = "/opt/code/docs.greenitglobe.com/gig/gig_team" # path to where you w
 ALERTA_DASHBOARD_URL = "<Alerta_url>" # ex. alerta.gig.con
 ALERTA_API_URL = "<alerta_api>" # ex. alerta.gig.com/api
 ALERTA_API_KEY = "<ALERTA_KEY>" # you can generate one from alerta portal
+ENV_FILE = "/opt/code/docs.greenitglobe.com/gig/gig_team/teams/operations/env.toml"
+MAIL_SERVER_HOST = "localhost"
+MAIL_SERVER_PORT = ""
+MAIL_SERVER_LOGIN = ""
+MAIL_SERVER_PASSWORD = ""
+FROM_EMAIL = "admin@alerta.aydo.com"
+GOOGLE_API_KEY_PATH="/opt/code/key1.json"
+AGENTS_SHEET_NAME="NOC and On-Call Shift Schedule"
+DEVOPS_SHEET_NAME = "DevOps"
+MONITORS_SHEET_NAME = "NOC Monitoring"
+SHIFTS_CODE_NAME = "Shifts"
+```
+to get `GOOGLE_API_KEY_PATH` follow [this](http://gspread.readthedocs.io/en/latest/oauth2.html)
+make sure you did this step
+```
+Go to Google Sheets and share your spreadsheet with an email you have in your json_key['client_email']. Otherwise you’ll get a SpreadsheetNotFound exception when trying to open it.
 ```
