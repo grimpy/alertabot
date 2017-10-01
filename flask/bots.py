@@ -34,7 +34,7 @@ def initialize_chat_ids():
 
     if not os.path.exists(CHAT_IDS_PATH):
         # dir_path = '/'.join(chat_ids_path.split("/")[:-1])
-        os.system("mkdir -p {}".format(chat_ids_path))
+        os.system("mkdir -p {}".format(CHAT_IDS_PATH))
         os.system("touch {}".format(PRIVATE_CHAT_PATH))
         os.system("touch {}".format(GROUP_CHAT_PATH))
 
