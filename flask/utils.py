@@ -69,10 +69,11 @@ def construct_message_text(data):
     return text
 
 def get_envs():
-    envs = {}
-    with open (ENV_FILE, "rb") as f:
-        envs = pytoml.load(f)
-    return envs
+    if os.path.exists(ENV_FILE):
+        with open (ENV_FILE, "rb") as f:
+            envs = pytoml.load(f)
+        return envs
+    return {}
 
 def pull_repo():
     url = config.REPO_URL
