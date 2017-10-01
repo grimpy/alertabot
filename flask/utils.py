@@ -73,3 +73,14 @@ def get_envs():
     with open (ENV_FILE, "rb") as f:
         envs = pytoml.load(f)
     return envs
+
+def pull_repo():
+    url = config.REPO_URL
+    path = config.REPO_PATH
+    parent_path = "/".join(self.path.split("/")[:-1])
+    LOG.debug("Pulling the repo")
+    if os.path.exists(path):
+        os.system('cd {} && git pull'.format(path))
+    else:
+        os.system('mkdir -p {}'.format(parent_path))
+        os.system('cd {} && git clone {}'.format(parent_path, url))

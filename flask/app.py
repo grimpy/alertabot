@@ -1,6 +1,5 @@
 from flask import Flask
 from bots import *
-from agent_manager import  AgentChooser
 import logging
 
 LOG = logging.getLogger()
@@ -39,17 +38,15 @@ bot = telepot.DelegatorBot(TOKEN, [
     pave_event_space()(
         per_callback_query_origin(), create_open, Alerter, timeout=5),
 ])
-agent_chooser = AgentChooser()
 agent_manager = AgentManager()
 message_loop = MessageLoop(bot)
-# def update_agents():
-#
-#     #agent_chooser.pull_repo()
-#     agent_chooser.update_agents()
-#     time.sleep(app.config.get("PULL_REPO_PERIOD", 1800))
-#
-# agent_thread = threading.Thread(name="update_agents", target=update_agents)
-# agent_thread.start()
+def pull_repo():
+
+    utils.pull_repo()
+    time.sleep(app.config.get("PULL_REPO_PERIOD", 1800))
+
+agent_thread = threading.Thread(name="pull_repo", target=pull_repo)
+agent_thread.start()
 
 def check_sent_messages():
     while(1):
