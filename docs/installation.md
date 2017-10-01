@@ -1,7 +1,7 @@
-## Installing alerta
-you can follow these steps to install Alerta as described [here](http://alerta.readthedocs.io/en/latest/gettingstarted/tutorial-1-deploy-alerta.html#tutorial-1)
 
-## Installing GIG plugins
+# Installing alerta
+you can follow these steps to install Alerta as described [here](http://alerta.readthedocs.io/en/latest/gettingstarted/tutorial-1-deploy-alerta.html#tutorial-1)
+# Installing GIG plugins
 from inside `alertabot/alerta_plugin/` folder do
 ```
 pip3 install .
@@ -23,7 +23,7 @@ SEVERITY_MAP = {
 }
 ```
 
-## Starting Flask Server
+# Starting Flask Server
 edit the file `config.py` under alertabot/flask to have the following inf
 ```
 TOKEN = "<Bot Token>" # The token you got from the bot father after creating the bot

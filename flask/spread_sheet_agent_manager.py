@@ -2,7 +2,7 @@ import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import config
 import datetime
-
+from datetime import time
 
 def singleton(cls):
     instances = {}
@@ -16,21 +16,22 @@ def singleton(cls):
 class AgentManager:
     def __init__(self):
         self.scope = ['https://www.googleapis.com/auth/drive', 'https://www.googleapis.com/auth/spreadsheets']
-        self.credentials = ServiceAccountCredentials.from_json_keyfile_name(config.GOOGLE_API_KEY_PATH, scope)
+        self.credentials = ServiceAccountCredentials.from_json_keyfile_name(config.GOOGLE_API_KEY_PATH, self.scope)
         self.shifts = {}
         self.agents = []
-        self.last_update = None
+        self.last_updated = None
+        self.update()
 
 
     def load_sheets(self):
-        self.gc = gspread.authorize(credentials)
-        self.ops_spread_sheet = gc.open(config.DEVOPS_SHEET_KEY)
-        self.devops_sheet = ops_spread_sheet.worksheet(config.DEVOPS_SHEET_NAME)
-        self.monitoring_sheet = ops_spread_sheet.worksheet(config.MONITORS_SHEET_NAME)
-        self.shifts_sheet = ops_spread_sheet.worksheet(config.SHIFTS_CODE_NAME)
+        self.gc = gspread.authorize(self.credentials)
+        self.ops_spread_sheet = self.gc.open(config.AGENTS_SHEET_NAME)
+        self.devops_sheet = self.ops_spread_sheet.worksheet(config.DEVOPS_SHEET_NAME)
+        self.monitoring_sheet = self.ops_spread_sheet.worksheet(config.MONITORS_SHEET_NAME)
+        self.shifts_sheet = self.ops_spread_sheet.worksheet(config.SHIFTS_CODE_NAME)
 
     def get_current_monitors(self):
-        return [agent for agent in self.agents if agent['shift'] == get_current_shift()]
+        return [agent for agent in self.agents if agent['shift'] == self.get_current_shift()]
 
     def get_current_first_oncalls(self):
         return [agent for agent in self.agents if agent['shift'] == 'OC-1']
@@ -46,15 +47,15 @@ class AgentManager:
         self.load_shifts()
         self.load_agents([self.monitoring_sheet, self.devops_sheet])
 
-    def load_shifts():
+    def load_shifts(self):
         """
         Loads shifts sheet in a dict to be easy to check current shift
         shifts = {'N': ['7:00', '12:00'], 'M':[12:00, 15:00}}
         """
         self.shifts = {}
-        for i in range(2, shifts_sheet.col_count):
-            if shifts_sheet.cell(2, i).value:
-                self.shifts[shifts_sheet.cell(2, i).value] = [shits_sheet.cell(3,i), shifts_sheet.cell(4,i)]
+        for i in range(2, self.shifts_sheet.col_count):
+            if self.shifts_sheet.cell(2, i).value:
+                self.shifts[self.shifts_sheet.cell(2, i).value] = [self.shifts_sheet.cell(3,i).value, self.shifts_sheet.cell(4,i).value]
             else:
                 break
 
@@ -64,24 +65,25 @@ class AgentManager:
         """
         self.agents = []
         now = datetime.datetime.now()
-        date = "{}/{}".format(now.moth, now.day)
-        date_cell = sheet.find(date)
-        for sheet in sheets
-            first_row, count = get_table_length(sheet, date_cell)
+        date = "{}/{}".format(now.month, now.day)
+        for sheet in sheets:
+            date_cell = sheet.find(date)
+            first_row, count = self.get_table_length(sheet, date_cell)
             for i in range(count):
                 if sheet.cell(first_row+i, date_cell.col).value:
-                    name = sheet.cell(first_row+i, 2)
-                    telegram = sheet.cell(first_row+i, 3)
-                    shift = sheet.cell(first_row+1, date_cell.col).value
+                    telegram_col = sheet.find("TelegramID").col
+                    name = sheet.cell(first_row+i, telegram_col-1).value
+                    telegram = sheet.cell(first_row+i, telegram_col).value.strip('@')
+                    shift = sheet.cell(first_row+i, date_cell.col).value
                     self.agents.append({'name': name, 'telegram':telegram, 'shift':shift})
         self.last_updated = date
 
     def get_current_shift(self):
         shift = None
         now = datetime.datetime.now()
-        for shift, time_list in self.shifts:
-            start_time = time_list[0].split(":")
-            end_time = time_list[1].split(":")
+        for shift, time_list in self.shifts.items():
+            start_time = list(map(int, time_list[0].split(":")))
+            end_time = list(map(int, time_list[1].split(":")))
             if start_time and end_time:
                 if time(now.hour, now.minute) > time(start_time[0], start_time[1]) and time(now.hour, now.minute) < time(end_time[0], end_time[1]):
                     break
@@ -97,8 +99,9 @@ class AgentManager:
         """
         first_row = date_cell.row + 2 #first row in the table (data row)
         count = 0
-        for i in range(first_row, aa.row_count):
-            if aa.cell(i,2).value: # the col(2) is the name column which should be exists
+        for i in range(first_row, sheet.row_count):
+            telegram_col = sheet.find("TelegramID").col
+            if sheet.cell(i,telegram_col).value: # the telegram col must be exists
                 count += 1
             else:
                 break
