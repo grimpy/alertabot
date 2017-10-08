@@ -25,6 +25,7 @@ import base64
 import datetime
 import utils
 
+
 app = Flask(__name__)
 app.config.from_pyfile("config.py")
 TOKEN = app.config['TOKEN']
@@ -46,6 +47,13 @@ def pull_repo():
     time.sleep(app.config.get("PULL_REPO_PERIOD", 1800))
 
 agent_thread = threading.Thread(name="pull_repo", target=pull_repo)
+agent_thread.start()
+
+def export_to_toml():
+    agent_manager.export_to_toml()
+    time.sleep(86400)
+
+agent_thread = threading.Thread(name="export", target=export_to_toml)
 agent_thread.start()
 
 def check_sent_messages():

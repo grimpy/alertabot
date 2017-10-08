@@ -3,7 +3,8 @@ from oauth2client.service_account import ServiceAccountCredentials
 import config
 import datetime
 from datetime import time
-
+from calendar import  monthrange
+from toml_manager import TomlManager
 def singleton(cls):
     instances = {}
     def getinstance():
@@ -78,6 +79,32 @@ class AgentManager:
                     self.agents.append({'name': name, 'telegram':telegram, 'shift':shift})
         self.last_updated = date
 
+    def get_agents(self, sheets, date):
+        """
+        get working agents in specific date
+        sheets: list of sheets to get agents from
+        date : date in "month/day" to be the same as in the sheet
+        """
+        agents = []
+        for sheet in sheets:
+            date_cell = sheet.find(date)
+            first_row, count = self.get_table_length(sheet, date_cell)
+            for i in range(count):
+                if sheet.cell(first_row+i, date_cell.col).value:
+                    telegram_col = sheet.find("TelegramID").col
+                    name = sheet.cell(first_row+i, telegram_col-1).value
+                    telegram = sheet.cell(first_row+i, telegram_col).value.strip('@')
+                    shift = sheet.cell(first_row+i, date_cell.col).value
+                    agents.append({'name': name, 'telegram':telegram, 'shift':shift})
+        # self.last_updated = date
+        return agents
+
+
+    def current_date(self):
+        now = datetime.datetime.now()
+        date = "{}/{}".format(now.month, now.day)
+        return date
+
     def get_current_shift(self):
         shift = None
         now = datetime.datetime.now()
@@ -85,8 +112,14 @@ class AgentManager:
             start_time = list(map(int, time_list[0].split(":")))
             end_time = list(map(int, time_list[1].split(":")))
             if start_time and end_time:
-                if time(now.hour, now.minute) > time(start_time[0], start_time[1]) and time(now.hour, now.minute) < time(end_time[0], end_time[1]):
-                    break
+                if end_time[0] > start_time[0]:
+                    if time(now.hour, now.minute) > time(start_time[0], start_time[1]) and time(now.hour, now.minute) < time(end_time[0], end_time[1]):
+                        break
+                else:
+                    if time(now.hour, now.minute) > time(start_time[0], start_time[1]) and time(now.hour, now.minute) < time(23, 59):
+                        break
+                    if time(now.hour, now.minute) > time(0, 0) and time(now.hour, now.minute) < time(end_time[0], end_time[1]):
+                        break
         else:
             raise Exception("Current time doesn't match any shifts")
         return shift
@@ -106,3 +139,57 @@ class AgentManager:
             else:
                 break
         return first_row, count
+
+    def get_agents_for_month(self):
+        """
+        export the excel sheet to toml for each person for this months
+        the date to be exported will start from the current day till the end of the month
+        agents = {'agent_1' : {'N': [1,2,3,4,5,6,7,8]}, {'D': 22,23,24}}
+        """
+
+        agents_data = {}
+        date = self.current_date()
+        now = datetime.datetime.now()
+        max_days = monthrange(now.year, now.month)[1]
+        sheets = [self.monitoring_sheet, self.devops_sheet]
+        for i in range(1, max_days + 1):
+            agents = self.get_agents(sheets, "{}/{}".format(now.month, i))
+            for agent in agents:
+                agent_data = agents_data.get(agent['name'], {})
+                shift = agent_data.get(agent['shift'], [])
+                shift.append(i)
+                agent_data[agent['shift']] = shift
+                agents_data[agent['name']] = agent_data
+        return agents_data
+
+    def export_to_toml(self):
+        toml_manager = TomlManager()
+        month_agents = self.get_agents_for_month()
+        for name, data in month_agents.items():
+            monitoring_data = self.get_monitoring_data(data)
+            toml_manager.update(name, monitoring_data)
+        toml_manager.push_changes()
+
+    def get_monitoring_data(self, agent_data):
+        """
+        cron = "Min Hour Day Month Weekday : valid_for"
+        """
+        now = datetime.datetime.now()
+        max_days = monthrange(now.year, now.month)[1]
+        valid_for = max_days - now.day
+        crons = []
+        for key, value in agent_data.items():
+            if key in self.shifts.keys():
+                shift_time = self.shifts[key]
+                start = shift_time[0].split(":")[0] # get the hour part
+                end = shift_time[1].split(":")[0]
+                hour = "{}-{}".format(start, end)
+                role = "Monitor"
+            else:
+                hour = "*"
+                role = "On Call"
+            days = ",".join([str(x) for x in value])
+            cron = "* {hour} {days} {month} *:{valid_for}d".format(hour=hour, days=days, month=now.month, valid_for=valid_for)
+            crons.append(cron)
+            monitoring_data = {'monitoring': {"period": crons, "role": role}}
+        return monitoring_data

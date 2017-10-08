@@ -5,6 +5,7 @@ import pytoml
 import logging
 import config
 import os
+from git import Repo
 
 LOG = logging.getLogger('alerts')
 def singleton(cls):
@@ -15,13 +16,14 @@ def singleton(cls):
         return instances[cls]
     return getinstance
 @singleton
-class AgentChooser:
+class TomlManager:
     def __init__(self):
         self.url = config.REPO_URL
         self.path = config.REPO_PATH
         self.parent_path = "/".join(self.path.split("/")[:-1])
-        self.operations_path = os.path.join(self.path, "teams/operations")
+        self.operations_path = os.path.join(self.path, "team/gig/operations")
         self.agents = []
+        self.pull_repo()
 
 
     def pull_repo(self):
@@ -32,6 +34,27 @@ class AgentChooser:
             os.system('mkdir -p {}'.format(self.parent_path))
             os.system('cd {} && git clone {}'.format(self.parent_path, self.url))
 
+    def update(self, name, monitoring_data):
+        path = "{}/{}/person.toml".format(self.operations_path, name)
+        if os.path.exists(path):
+            try:
+                with open(path, 'rb') as f:
+                    toml = pytoml.load(f)
+                with open(path, 'w') as f:
+                    toml['monitoring_data'] = monitoring_data
+                    pytoml.dump(toml, f)
+            except Exception as e:
+                print(e)
+    def push_changes(self):
+        """
+        push changes to the repo
+        """
+        repo = Repo(self.path)
+        if repo.is_dirty():
+            repo.index.add('*')
+            print("commiting changes .....")
+            repo.index.commit('Update devops files')
+            repo.remote().push(refspec="master:master")
     def get_file_paths(self):
         LOG.debug("Get paths for agents person.toml file")
         file_paths = []
@@ -56,16 +79,13 @@ class AgentChooser:
             try:
                 with open(path, 'rb') as f:
                     toml = pytoml.load(f)
-                    escalation = toml['escalation'][0]
                     agent = Agent(
                                  name = "{} {}".format(toml['first_name'], toml['last_name']),
                                  telegram = toml['telegram'].strip("@"),
-                                 backup = escalation['backup'],
-                                 backup_time = escalation['backup_time'],
-                                 escalation_path = escalation['escalation_path'],
-                                 working_period = escalation['period'],
-                                 exclude_period = escalation['exclude'],
-                                 reports_into = toml['reports_into'],
+                                 backup = toml['backup'].strip("@"),
+                                 reports_into = toml['reports_into'].strip("@"),
+                                 working_period = toml['period'],
+                                 exclude_period = toml['exclude'],
                                  )
 
                     agents.append(agent)

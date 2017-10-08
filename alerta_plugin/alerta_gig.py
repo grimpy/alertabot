@@ -13,6 +13,8 @@ class GIGAlert(PluginBase):
         return alert
 
     def post_receive(self, alert):
+        if alert.repeat:
+            return
         data = {}
         data['id'] = alert.id
         data['short_id'] = alert.get_id(short=True)
