@@ -115,6 +115,8 @@ def new_alert():
     get_sent_messages().append(msg)
 
     #send message to specified telegram groups and email
+    # envs = get_envs()
+    for env, env_data in toml_manager.envs.items():
         if 'all' in list(map(lambda x: x.lower(), env_data.get('envs'))) or data['environment'] in env_data.get('envs'):
                 for group in env_data.get("telegrams"):
                     send_message(group, text, callback=False, group=True)
