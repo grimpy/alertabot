@@ -52,3 +52,13 @@ make sure you did this step
 ```
 Go to Google Sheets and share your spreadsheet with an email you have in your json_key['client_email']. Otherwise you’ll get a SpreadsheetNotFound exception when trying to open it.
 ```
+
+to export spread sheet to toml. configuring a cron job is required to do this every month
+```
+crontab -e
+```
+this will open an editor where you can add the job
+
+```
+0 0  1   *   *     python3 /opt/code/github/openvcloud/alertabot/flask/cron.py >/dev/null 2>&1
+```
