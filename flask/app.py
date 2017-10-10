@@ -3,10 +3,6 @@ from bots import *
 import logging
 
 LOG = logging.getLogger()
-# ch = logging.StreamHandler()
-# ch.setLevel(logging.DEBUG)
-# LOG.addHandler(ch)
-LOG.setLevel(logging.DEBUG)
 import telepot
 from telepot.delegate import (
     per_chat_id, per_callback_query_origin, create_open, pave_event_space, per_message, call,
@@ -24,6 +20,7 @@ from spread_sheet_agent_manager import AgentManager
 import base64
 import datetime
 import utils
+from toml_manager import TomlManager
 
 
 app = Flask(__name__)
@@ -41,20 +38,16 @@ bot = telepot.DelegatorBot(TOKEN, [
 ])
 agent_manager = AgentManager()
 message_loop = MessageLoop(bot)
+toml_manager = TomlManager()
 def pull_repo():
 
     utils.pull_repo()
+    toml_manager.load_envs()
     time.sleep(app.config.get("PULL_REPO_PERIOD", 1800))
 
 agent_thread = threading.Thread(name="pull_repo", target=pull_repo)
 agent_thread.start()
 
-def export_to_toml():
-    agent_manager.export_to_toml()
-    time.sleep(86400)
-
-agent_thread = threading.Thread(name="export", target=export_to_toml)
-agent_thread.start()
 
 def check_sent_messages():
     while(1):
@@ -122,8 +115,6 @@ def new_alert():
     get_sent_messages().append(msg)
 
     #send message to specified telegram groups and email
-    envs = get_envs()
-    for env, env_data in envs.items():
         if 'all' in list(map(lambda x: x.lower(), env_data.get('envs'))) or data['environment'] in env_data.get('envs'):
                 for group in env_data.get("telegrams"):
                     send_message(group, text, callback=False, group=True)
@@ -132,9 +123,12 @@ def new_alert():
     return jsonify(stats_code=200)
 
 def send_email(to, data):
-    s = MailService()
-    body = utils.body_as_html(data)
-    s.send(to, body)
+    try:
+        s = MailService()
+        body = utils.body_as_html(data)
+        s.send(to, body)
+    except Exception as e:
+        print(e)
 
 def construct_message_text(data):
     text = '[%s](%s) %s: %s - %s on %s\n%s' % (

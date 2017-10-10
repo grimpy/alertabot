@@ -20,7 +20,7 @@ import json
 from alertaclient.api import ApiClient
 from alertaclient.alert import Alert
 from utils import *
-
+from toml_manager import TomlManager
 chat_ids = {}
 group_chat_ids = {}
 CHAT_IDS_PATH = config.CHAT_IDS_PATH # path to dir in which we will save ids
@@ -70,11 +70,12 @@ class AlertsStarter(telepot.helper.ChatHandler):
     def on_chat_message(self, msg):
         content_type, chat_type, chat_id = telepot.glance(msg)
         LOG.info('incomming message content_type: {}, chat_type {}, chat_id{}'.format(content_type, chat_type, chat_id))
-        if content_type == 'text' and msg['text'] == '/start':
+        if content_type == 'text' and '/start' in msg['text']:
             if chat_type == "group":
                 group_name = msg['chat']['title']
                 #check if we have a defined group with this name or not
-                for env_name, env_data in get_envs().items():
+                toml_manager = TomlManager()
+                for env_name, env_data in toml_manager.envs.items():
                     if group_name in env_data.get('telegrams'):
                         group_chat_ids[group_name] = chat_id
                         with open(GROUP_CHAT_PATH, "w") as f:

@@ -6,6 +6,7 @@ import logging
 import config
 import os
 from git import Repo
+import utils
 
 LOG = logging.getLogger('alerts')
 def singleton(cls):
@@ -23,7 +24,9 @@ class TomlManager:
         self.parent_path = "/".join(self.path.split("/")[:-1])
         self.operations_path = os.path.join(self.path, "team/gig/operations")
         self.agents = []
-        self.pull_repo()
+        self.envs = {}
+        utils.pull_repo()
+        self.load_envs()
 
 
     def pull_repo(self):
@@ -51,8 +54,8 @@ class TomlManager:
         """
         repo = Repo(self.path)
         if repo.is_dirty():
-            repo.index.add('*')
             print("commiting changes .....")
+            repo.index.add('*')
             repo.index.commit('Update devops files')
             repo.remote().push(refspec="master:master")
     def get_file_paths(self):
@@ -62,6 +65,11 @@ class TomlManager:
             file_paths.append(file_path)
         return file_paths
 
+    def load_envs(self):
+        self.envs = {}
+        if os.path.exists(config.ENV_FILE):
+            with open (config.ENV_FILE, "rb") as f:
+                self.envs = pytoml.load(f)
 
     def get_current_agent(self):
         for agent in self.agents:
