@@ -13,6 +13,8 @@ class GIGAlert(PluginBase):
         return alert
 
     def post_receive(self, alert):
+        if alert.state == 'closed':
+            return
         if alert.repeat:
             return
         data = {}
@@ -23,6 +25,7 @@ class GIGAlert(PluginBase):
         data['environment'] = alert.environment
         data['event'] = alert.event
         data['resource'] = alert.resource
+        data['state'] = alert.state
         r = requests.post(URL, data=json.dumps(data))
         return
 

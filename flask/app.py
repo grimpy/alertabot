@@ -76,7 +76,7 @@ def check_sent_messages():
                 else:
                     try:
                         # at this point we should delete old messages even if no one picked them
-                        messages.remove(message)
+                        messages.remove(msg)
                     except Exception as e:
                         # should pass if the user caught it before deleting
                         pass
@@ -107,7 +107,6 @@ def new_alert():
 
     # Add message to sent message to do escalation for it
     msg = {}
-    # msg['telegram'] = agent.telegram
     msg['timestamp'] = time.time()
     msg['data'] = data
     msg['level'] = "level1"
