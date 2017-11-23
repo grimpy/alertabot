@@ -69,8 +69,7 @@ def check_sent_messages():
                     text = construct_message_text(msg['data'])
                     second_oncalls = agent_manager.get_current_second_oncalls()
                     for agent in second_oncalls:
-                        send_message(agent['telegram'], msg['data'], callback=True)
-                    # Remove once escalated
+                        send_message(agent['telegram'], text, callback=True)
                     msg['timestamp'] == time.time()
                     msg['level'] = "level3"
                 else:
@@ -91,6 +90,7 @@ message_thread.start()
 @app.route('/alerts', methods=['POST'])
 def new_alert():
     data = json.loads(request.data.decode())
+    data['text'] = data['text'].replace('_', '-')
     LOG.debug("Alert received: {}".format(data))
     now = datetime.datetime.now()
     date = "{}/{}".format(now.month, now.day)
@@ -166,36 +166,6 @@ def send_message(telegram, text, callback=False, group=False):
         LOG.debug(e)
         pass
     return message
-
-
-def send_inline_message(telegram, data, call_back="ack"):
-    text = '[%s](%s) %s: %s - %s on %s\n%s' % (
-                data['short_id'],
-                '%s/#/alert/%s' % (config.ALERTA_DASHBOARD_URL, data['id']),
-                data['environment'],
-                data['severity'],
-                data['event'],
-                data['resource'],
-                data['text']
-            )
-    try:
-        chat_id = get_chat_ids().get(telegram)
-        keyboard = InlineKeyboardMarkup(
-            inline_keyboard=[[
-                {'text':'ack', 'callback_data': 'ack'},
-                {'text':'close', 'callback_data': 'close'},
-
-            ]]
-            )
-        message = bot.sendMessage(chat_id, text, parse_mode='Markdown', reply_markup=keyboard)
-
-    except Exception as e:
-        # this agent is not registered so skip sending the message
-        pass
-    return text
-
-
-
 
 if __name__ == "__main__":
     message_loop.run_as_thread()
