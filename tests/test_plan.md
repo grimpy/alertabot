@@ -9,7 +9,7 @@
 - Check that this Error appear too in alerta with proper parameters (Environment, category, text and service)
 - reduce the load from  cpu and make sure that healthcheck error ended , check it closed too in alerta . 
 
-### Scenario 3 ( "Check send message with error or warnning on telegram") 
+### Scenario 3 ( "Check sending message with error or warnning on telegram") 
 - Check that any warnning or Error in alerta, will be sent to ops telegeram chat . 
 - Check that any warnning or Error in alerta, will be sent to someone who responsible of monitoring  as exist in ops spreedsheet .
 - Check if monitor ack the message ,nothing happen but Error or warrnig will be exist in alerta unless the problem solved. 
