@@ -1,12 +1,12 @@
 ## Manual test scenarios : 
 
-### Scenario 1 ("check that lerta doesn't have fake alerts")
-- Get random error or warnning alert,and get the following parameters from error :(Environment(En1)-Event(Ev1)-Source(S1)).
-- Check that the Environment(Ev1) has this event(Ev1) with right source(S1).
+### Scenario 1 ("check that alerta doesn't have fake alerts")
+- Get random error or warnning alert,and get the following parameters from error :(Environment(En1), category, text and service).
+- Check that the Environment(En1) has this Error or warnning with right category, text and service . 
 
 ### Scenario 2 ("Check that the  new error or warnning in healthchek in ovc will reflect in alerta")
 - Try to generate Error in health check as example stress one of cpu load to level which make error appear in System Load healthcheck
-- Check that this Error appear too in alerta with proper parameters (Environment-Event-Source)
+- Check that this Error appear too in alerta with proper parameters (Environment, category, text and service)
 - reduce the load from  cpu and make sure that healthcheck error ended , check it closed too in alerta . 
 
 ### Scenario 3 ( "Check send message with error or warnning on telegram") 
