@@ -138,7 +138,7 @@ def construct_message_text(data):
     data['environment'],
     data['severity'],
     data['event'],
-    data['resource'],
+    data['service'],
     data['text']
     )
     return text
@@ -170,3 +170,4 @@ def send_message(telegram, text, callback=False, group=False):
 if __name__ == "__main__":
     message_loop.run_as_thread()
     app.run(debug=True, use_reloader=False)
+

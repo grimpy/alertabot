@@ -25,6 +25,7 @@ class GIGAlert(PluginBase):
         data['environment'] = alert.environment
         data['event'] = alert.event
         data['resource'] = alert.resource
+        data['service'] = alert.service
         data['state'] = alert.status
         r = requests.post(URL, data=json.dumps(data))
         return
