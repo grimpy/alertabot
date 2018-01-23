@@ -90,6 +90,7 @@ message_thread.start()
 
 @app.route('/alerts', methods=['POST'])
 def new_alert():
+    warning = None
     data = json.loads(request.data.decode())
     data['text'] = data['text'].replace('_', '-')
     LOG.debug("Alert received: {}".format(data))
