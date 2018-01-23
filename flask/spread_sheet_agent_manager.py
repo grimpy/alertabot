@@ -50,9 +50,12 @@ class AgentManager:
         """
         update cached agents data, basically will be called once per day
         """
-        self.load_sheets()
-        self.load_shifts()
-        self.load_agents([self.monitoring_sheet, self.devops_sheet])
+        try:
+            self.load_sheets()
+            self.load_shifts()
+            self.load_agents([self.monitoring_sheet, self.devops_sheet])
+        except gspread.exceptions.CellNotFound as e :
+            return e.message
 
     def load_shifts(self):
         """

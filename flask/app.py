@@ -97,12 +97,8 @@ def new_alert():
     now = datetime.datetime.now()
     date = "{}/{}".format(now.month, now.day)
     if agent_manager.last_updated != date:
-        try:
-            agent_manager.update()
-        except CellNotFound as e :
-            text = 'date %s not found in the spreadsheet' % date
-            notify_flag = False
-    if notify_flag:
+        text = agent_manager.update()
+    if text:
         monitors = agent_manager.get_current_monitors()
         text = construct_message_text(data)
         message_id = None
