@@ -89,38 +89,42 @@ message_thread.start()
 
 @app.route('/alerts', methods=['POST'])
 def new_alert():
+    notify_flag = True
     data = json.loads(request.data.decode())
     data['text'] = data['text'].replace('_', '-')
     LOG.debug("Alert received: {}".format(data))
     now = datetime.datetime.now()
     date = "{}/{}".format(now.month, now.day)
     if agent_manager.last_updated != date:
-        agent_manager.update()
+        try:
+            agent_manager.update()
+        except MissingSpreadsheet as e :
+            notify_flag = False
+    if notify_flag:
+        monitors = agent_manager.get_current_monitors()
+        text = construct_message_text(data)
+        message_id = None
+        for agent in monitors:
+            message = send_message(agent['telegram'], text, callback=True)
+            if message and not message_id:
+                message_id = message['text']
 
-    monitors = agent_manager.get_current_monitors()
-    text = construct_message_text(data)
-    message_id = None
-    for agent in monitors:
-        message = send_message(agent['telegram'], text, callback=True)
-        if message and not message_id:
-            message_id = message['text']
+        # Add message to sent message to do escalation for it
+        msg = {}
+        msg['timestamp'] = time.time()
+        msg['data'] = data
+        msg['level'] = "level1"
+        msg['message_id'] = message_id
+        get_sent_messages().append(msg)
 
-    # Add message to sent message to do escalation for it
-    msg = {}
-    msg['timestamp'] = time.time()
-    msg['data'] = data
-    msg['level'] = "level1"
-    msg['message_id'] = message_id
-    get_sent_messages().append(msg)
-
-    #send message to specified telegram groups and email
-    # envs = get_envs()
-    for env, env_data in toml_manager.envs.items():
-        if 'all' in list(map(lambda x: x.lower(), env_data.get('envs'))) or data['environment'] in env_data.get('envs'):
-                for group in env_data.get("telegrams"):
-                    send_message(group, text, callback=False, group=True)
-                for email in env_data.get("emails"):
-                    send_email(email, text)
+        #send message to specified telegram groups and email
+        # envs = get_envs()
+        for env, env_data in toml_manager.envs.items():
+            if 'all' in list(map(lambda x: x.lower(), env_data.get('envs'))) or data['environment'] in env_data.get('envs'):
+                    for group in env_data.get("telegrams"):
+                        send_message(group, text, callback=False, group=True)
+                    for email in env_data.get("emails"):
+                        send_email(email, text)
     return jsonify(stats_code=200)
 
 def send_email(to, data):
