@@ -17,6 +17,7 @@ import threading
 import config
 from utils import *
 from spread_sheet_agent_manager import AgentManager
+from gspread.exceptions import CellNotFound
 import base64
 import datetime
 import utils
@@ -98,7 +99,8 @@ def new_alert():
     if agent_manager.last_updated != date:
         try:
             agent_manager.update()
-        except MissingSpreadsheet as e :
+        except CellNotFound as e :
+            text = 'date %s not found in the spreadsheet' % date
             notify_flag = False
     if notify_flag:
         monitors = agent_manager.get_current_monitors()
@@ -125,6 +127,11 @@ def new_alert():
                         send_message(group, text, callback=False, group=True)
                     for email in env_data.get("emails"):
                         send_email(email, text)
+    else:
+        for env, env_data in toml_manager.envs.items():
+            for group in env_data.get("telegrams"):
+                send_message(group, text, callback=False, group=True)
+
     return jsonify(stats_code=200)
 
 def send_email(to, data):

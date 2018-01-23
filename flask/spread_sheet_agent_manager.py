@@ -75,8 +75,6 @@ class AgentManager:
         date = "{}/{}".format(now.month, now.day)
         for sheet in sheets:
             date_cell = sheet.find(date)
-            if not date_cell:
-                raise MissingSpreadsheet("spreadsheet for [ %s ] was not entered" % date)
             first_row, count = self.get_table_length(sheet, date_cell)
             for i in range(count):
                 if sheet.cell(first_row+i, date_cell.col).value:
