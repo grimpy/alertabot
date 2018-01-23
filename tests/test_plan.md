@@ -17,4 +17,4 @@
 - Check if on-call one  didn't ack the message for 15 min , the message will be sended to on-call two.
 
 
-## Scenario 4 ( Check that there is no any duplicated events )
+### Scenario 4 ( Check that there is no any duplicated events )
