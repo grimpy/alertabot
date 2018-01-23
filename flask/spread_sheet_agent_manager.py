@@ -13,12 +13,6 @@ def singleton(cls):
         return instances[cls]
     return getinstance
 
-class MissingSpreadsheet(Exception):
-    """
-    Error when find on spreadsheet returns none
-    """
-    pass
-
 @singleton
 class AgentManager:
     def __init__(self):
@@ -27,7 +21,6 @@ class AgentManager:
         self.shifts = {}
         self.agents = []
         self.last_updated = None
-        self.update()
 
 
     def load_sheets(self):
@@ -50,12 +43,10 @@ class AgentManager:
         """
         update cached agents data, basically will be called once per day
         """
-        try:
-            self.load_sheets()
-            self.load_shifts()
-            self.load_agents([self.monitoring_sheet, self.devops_sheet])
-        except gspread.exceptions.CellNotFound as e :
-            return 'Warning Spreadsheet does not contain %s notification will be disabled for this date.' % e.args[0]
+        self.load_sheets()
+        self.load_shifts()
+        self.load_agents([self.monitoring_sheet, self.devops_sheet])
+
 
     def load_shifts(self):
         """

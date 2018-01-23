@@ -96,7 +96,10 @@ def new_alert():
     now = datetime.datetime.now()
     date = "{}/{}".format(now.month, now.day)
     if agent_manager.last_updated != date:
-        warning = agent_manager.update()
+        try:
+            agent_manager.update()
+        except CellNotFound as err:
+            warning = 'Warning Spreadsheet does not contain %s notification will be disabled for this date.' % err.args[0]
     monitors = agent_manager.get_current_monitors()
     text = construct_message_text(data)
     message_id = None
