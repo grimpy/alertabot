@@ -55,7 +55,7 @@ class AgentManager:
             self.load_shifts()
             self.load_agents([self.monitoring_sheet, self.devops_sheet])
         except gspread.exceptions.CellNotFound as e :
-            return e.message
+            return 'Warning Spreadsheet does not contain %s notification will be disabled for this date.' % e.args[0]
 
     def load_shifts(self):
         """
