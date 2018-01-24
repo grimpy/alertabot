@@ -17,6 +17,7 @@ import threading
 import config
 from utils import *
 from spread_sheet_agent_manager import AgentManager
+from gspread.exceptions import CellNotFound
 import base64
 import datetime
 import utils
@@ -89,14 +90,21 @@ message_thread.start()
 
 @app.route('/alerts', methods=['POST'])
 def new_alert():
+    warning = None
     data = json.loads(request.data.decode())
     data['text'] = data['text'].replace('_', '-')
     LOG.debug("Alert received: {}".format(data))
     now = datetime.datetime.now()
     date = "{}/{}".format(now.month, now.day)
     if agent_manager.last_updated != date:
-        agent_manager.update()
-
+        try:
+            agent_manager.update()
+        except CellNotFound as err:
+            warning = """
+            Warning Spreadsheet does not contain the date [ %s ].
+            DevOPs notifications will be disabled for this date!
+            Please update Spreadsheet to re-enable.
+            """ % err.args[0]
     monitors = agent_manager.get_current_monitors()
     text = construct_message_text(data)
     message_id = None
@@ -121,6 +129,11 @@ def new_alert():
                     send_message(group, text, callback=False, group=True)
                 for email in env_data.get("emails"):
                     send_email(email, text)
+        if warning:
+            for env, env_data in toml_manager.envs.items():
+                for group in env_data.get("telegrams"):
+                    send_message(group, warning, callback=False, group=True)
+
     return jsonify(stats_code=200)
 
 def send_email(to, data):

@@ -21,7 +21,6 @@ class AgentManager:
         self.shifts = {}
         self.agents = []
         self.last_updated = None
-        self.update()
 
 
     def load_sheets(self):
@@ -47,6 +46,7 @@ class AgentManager:
         self.load_sheets()
         self.load_shifts()
         self.load_agents([self.monitoring_sheet, self.devops_sheet])
+
 
     def load_shifts(self):
         """
