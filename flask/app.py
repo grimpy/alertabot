@@ -111,8 +111,7 @@ def new_alert():
         try:
             agent_manager.update()
         except CellNotFound as err:
-            warning = """
-            Warning Spreadsheet does not contain the date [ %s ].
+            warning = """Warning Spreadsheet does not contain the date [ %s ].
             DevOPs notifications will be disabled for this date!
             Please update Spreadsheet to re-enable.
             """ % err.args[0]
