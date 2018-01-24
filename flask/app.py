@@ -86,7 +86,7 @@ def check_sent_messages():
 message_thread = threading.Thread(name="message_thread", target=check_sent_messages)
 message_thread.start()
 
-@app.route('/alerts', methods=['POST'])
+@app.route('/alerts/closed', methods=['POST'])
 def closed():
     data = json.loads(request.data.decode())
     data['text'] = data['text'].replace('_', '-')
