@@ -86,7 +86,18 @@ def check_sent_messages():
 message_thread = threading.Thread(name="message_thread", target=check_sent_messages)
 message_thread.start()
 
-
+@app.route('/alerts', methods=['POST'])
+def closed():
+    data = json.loads(request.data.decode())
+    data['text'] = data['text'].replace('_', '-')
+    text = 'CLOSED: %s' % construct_message_text(data)
+    for env, env_data in toml_manager.envs.items():
+        if 'all' in list(map(lambda x: x.lower(), env_data.get('envs'))) or data['environment'] in env_data.get('envs'):
+                for group in env_data.get("telegrams"):
+                    send_message(group, text, callback=False, group=True)
+                for email in env_data.get("emails"):
+                    send_email(email, text)
+    return jsonify(stats_code=200)
 
 @app.route('/alerts', methods=['POST'])
 def new_alert():
