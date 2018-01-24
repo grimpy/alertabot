@@ -16,7 +16,7 @@ class GIGAlert(PluginBase):
         if alert.status == 'closed':
             return
         db_alert = db.get_alert(alert.id)
-        flapping = db.is_flapping(db_alert, 180)
+        flapping = db.is_flapping(db_alert, 300, 2)
         if flapping:
             return
 
@@ -24,7 +24,11 @@ class GIGAlert(PluginBase):
         data['id'] = alert.id
         data['short_id'] = alert.get_id(short=True)
         data['severity'] = alert.severity.capitalize()
-        data['text'] = alert.text
+        first_flapping = db.is_flapping(db_alert, 300, 1)
+        if first_flapping:
+            data['text'] = '{}-(FLAPPING)'.format(alert.text)
+        else:
+            data['text'] = alert.text
         data['environment'] = alert.environment
         data['event'] = alert.event
         data['resource'] = alert.resource
@@ -35,7 +39,7 @@ class GIGAlert(PluginBase):
 
     def status_change(self, alert, status, text):
         db_alert = db.get_alert(alert.id)
-        flapping = db.is_flapping(db_alert, 180)
+        flapping = db.is_flapping(db_alert, 300, 2)
         if flapping:
             return
         if status == 'closed':
@@ -43,7 +47,11 @@ class GIGAlert(PluginBase):
             data['id'] = alert.id
             data['short_id'] = alert.get_id(short=True)
             data['severity'] = alert.severity.capitalize()
-            data['text'] = alert.text
+            first_flapping = db.is_flapping(db_alert, 300, 1)
+            if first_flapping:
+                data['text'] = '{}-(FLAPPING)'.format(alert.text)
+            else:
+                data['text'] = alert.text
             data['environment'] = alert.environment
             data['event'] = alert.event
             data['resource'] = alert.resource
