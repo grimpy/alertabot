@@ -42,21 +42,23 @@ class GIGAlert(PluginBase):
         flapping = db.is_flapping(db_alert, 300, 2)
         if flapping:
             return
+        data = {}
+        data['id'] = alert.id
+        data['short_id'] = alert.get_id(short=True)
+        data['severity'] = alert.severity.capitalize()
+        first_flapping = db.is_flapping(db_alert, 300, 1)
+        if first_flapping:
+            data['text'] = '{}-(FLAPPING)'.format(alert.text)
+        else:
+            data['text'] = alert.text
+        data['environment'] = alert.environment
+        data['event'] = alert.event
+        data['resource'] = alert.resource
+        data['service'] = alert.service
+        data['state'] = alert.status
         if status == 'closed':
-            data = {}
-            data['id'] = alert.id
-            data['short_id'] = alert.get_id(short=True)
-            data['severity'] = alert.severity.capitalize()
-            first_flapping = db.is_flapping(db_alert, 300, 1)
-            if first_flapping:
-                data['text'] = '{}-(FLAPPING)'.format(alert.text)
-            else:
-                data['text'] = alert.text
-            data['environment'] = alert.environment
-            data['event'] = alert.event
-            data['resource'] = alert.resource
-            data['service'] = alert.service
-            data['state'] = alert.status
             r = requests.post('%s/closed' % URL, data=json.dumps(data))
+        elif status == 'open':
+            r = requests.post(URL, data=json.dumps(data))
         return
 
