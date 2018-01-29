@@ -18,3 +18,11 @@
 
 
 ### Scenario 4 ( "Check that there is no any duplicated events" )
+
+### Scenario 5 ("check Auto-clear alarms  and flapping ):
+- Try to close one of open alerts, should send message to telegram group, and alert move to close ones.
+- Try to open it again , should send message to telegram group, and alert move to open ones  again .
+- Try to close it again , should send message with flapping label  to telegram group, and alert move to close ones  again.
+- Try to change it's status again multiple times, should no message sent to telegram group.
+- Wait for 5 min with no changes in status of alert , then try to change it again, should return send message to telegram again.  
+ 
